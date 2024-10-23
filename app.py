@@ -1,13 +1,9 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from datetime import datetime
-from pymongo import MongoClient,DESCENDING
+from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
 import pytz
-
-MAX_RETRIES = 3
-RETRY_DELAY_SECONDS = 1
 
 app = Flask(__name__)
 CORS(app)
