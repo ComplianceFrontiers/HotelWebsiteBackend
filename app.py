@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pymongo import MongoClient
@@ -85,5 +86,54 @@ def checkout():
         }
         users_collection.insert_one(checkout_data)
         return jsonify({"message": "Checkout details saved successfully"}), 201
+
+@app.route('/checkout/filter', methods=['GET'])
+def filter_checkout_details():
+    title = request.args.get('title', '').strip()  # Strip any whitespace/newlines
+    check_in = request.args.get('checkIn', '').strip()  # Strip any whitespace/newlines
+
+    if not title or not check_in:
+        return jsonify({"error": "Title and check-in date are required"}), 400
+
+    print(f"Searching for Title: {title}, Check-In Date: {check_in}")
+
+    matching_bookings = []
+
+    users = users_collection.find({}, {"email": 1, "checkout_details": 1})  # Fetch only email and checkout_details
+
+    for user in users:
+        for booking_list in user.get('checkout_details', []):
+            for booking in booking_list:
+                print(f"Checking Booking: {booking}")  # Debugging line
+                
+                booking_check_in = booking.get('checkIn')
+                if booking_check_in and isinstance(booking_check_in, str):
+                    try:
+                        booking_check_in_date = datetime.fromisoformat(booking_check_in)
+                        request_check_in_date = datetime.fromisoformat(check_in)
+                    except ValueError as e:
+                        print(f"Invalid date format: {e}")  # Improved error logging
+                        continue
+                    
+                    if booking.get('title') == title and booking_check_in_date == request_check_in_date:
+                        matching_bookings.append({
+                            "email": user['email'],
+                            "booking": booking
+                        })
+
+    print(f"Matching Bookings: {matching_bookings}")  # Debugging line
+    return jsonify(matching_bookings), 200
+
+@app.route('/users', methods=['GET'])
+def get_all_users():
+    # Fetch all users from the database, excluding the _id field
+    users = users_collection.find({}, {"_id": 0})  # 0 to exclude _id
+
+    # Convert MongoDB documents to a list of dictionaries
+    users_list = [user for user in users]  # Convert each user document to a dictionary
+
+    return jsonify(users_list), 200
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80)
