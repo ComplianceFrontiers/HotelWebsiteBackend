@@ -134,6 +134,32 @@ def get_all_users():
 
     return jsonify(users_list), 200
 
+@app.route('/users/already_booked_dates', methods=['GET'])
+def already_booked_dates():
+    # Fetch all users from the database and extract booked_dates
+    users = users_collection.find({}, {"_id": 0, "booked_details.booked_dates": 1})  # Fetch only booked_dates fields
+
+    # Prepare a response containing the booked dates
+    result = []
+    for user in users:
+        # Initialize a list to hold all booked dates
+        booked_dates = []
+        
+        # Extract booked dates from booked_details
+        for booked_detail in user.get("booked_details", []):
+            for booked_date in booked_detail.get("booked_dates", []):
+                # Append only date, startTime, and endTime to the result
+                booked_dates.append({
+                    "date": booked_date["date"],
+                    "startTime": booked_date["startTime"],
+                    "endTime": booked_date["endTime"]
+                })
+        
+        # Add the user's booked dates to the result
+        if booked_dates:
+            result.append({"booked_dates": booked_dates})
+
+    return jsonify(result), 200
 
 if __name__ == '__main__':
     app.run()
