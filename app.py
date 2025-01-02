@@ -61,10 +61,10 @@ def signup():
 def checkout():
     data = request.json
     email = data.get('email')  # Get email from the request
-    checkout_details = data.get('checkout_details')  # Get checkout details
+    booked_details = data.get('booked_details')  # Get checkout details
 
     # Basic validation
-    if not email or not checkout_details:
+    if not email or not booked_details:
         return jsonify({"error": "Email and checkout details are required"}), 400
 
     # Check if user exists in the database
@@ -72,23 +72,23 @@ def checkout():
 
     if user:
         # If user exists, append the new checkout details
-        if 'checkout_details' not in user:
-            user['checkout_details'] = []  # Initialize if not present
-        user['checkout_details'].append(checkout_details)
+        if 'booked_details' not in user:
+            user['booked_details'] = []  # Initialize if not present
+        user['booked_details'].append(booked_details)
         # Update the user record in the database
-        users_collection.update_one({"email": email}, {"$set": {"checkout_details": user['checkout_details']}})
+        users_collection.update_one({"email": email}, {"$set": {"booked_details": user['booked_details']}})
         return jsonify({"message": "Checkout details appended successfully"}), 200
     else:
         # If user does not exist, create a new record
         checkout_data = {
             "email": email,
-            "checkout_details": [checkout_details]  # Store in a list
+            "booked_details": [booked_details]  # Store in a list
         }
         users_collection.insert_one(checkout_data)
         return jsonify({"message": "Checkout details saved successfully"}), 201
 
 @app.route('/checkout/filter', methods=['GET'])
-def filter_checkout_details():
+def filter_booked_details():
     title = request.args.get('title', '').strip()  # Strip any whitespace/newlines
     check_in = request.args.get('checkIn', '').strip()  # Strip any whitespace/newlines
 
@@ -99,10 +99,10 @@ def filter_checkout_details():
 
     matching_bookings = []
 
-    users = users_collection.find({}, {"email": 1, "checkout_details": 1})  # Fetch only email and checkout_details
+    users = users_collection.find({}, {"email": 1, "booked_details": 1})  # Fetch only email and booked_details
 
     for user in users:
-        for booking_list in user.get('checkout_details', []):
+        for booking_list in user.get('booked_details', []):
             for booking in booking_list:
                 print(f"Checking Booking: {booking}")  # Debugging line
                 
