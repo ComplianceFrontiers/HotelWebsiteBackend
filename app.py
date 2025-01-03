@@ -124,6 +124,39 @@ def checkout():
             "booking_id": booking_id
         }), 201
 
+
+@app.route('/get-booking-details', methods=['POST'])
+def get_booking_details():
+    data = request.json
+    booking_id = data.get('booking_id')  # Get booking_id from the request
+
+    # Basic validation
+    if not booking_id:
+        return jsonify({"error": "Booking ID is required"}), 400
+
+    # Search for the booking details in the database
+    user = users_collection.find_one({"booked_details.booking_id": booking_id})
+
+    if user:
+        # Find the specific booking details
+        booked_details = next(
+            (booking for booking in user['booked_details'] if booking['booking_id'] == booking_id),
+            None
+        )
+
+        if booked_details:
+            return jsonify({
+                "email": user['email'],
+                "name": user['full_name'],
+                "phone": user['phone'],
+                "booking_details": booked_details
+            }), 200
+        else:
+            return jsonify({"error": "Booking not found"}), 404
+    else:
+        return jsonify({"error": "Booking ID does not exist"}), 404
+
+
 @app.route('/checkout/filter', methods=['GET'])
 def filter_booked_details():
     title = request.args.get('title', '').strip()  # Strip any whitespace/newlines
