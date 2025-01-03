@@ -32,17 +32,31 @@ def home():
 def login():
     data = request.json
     email = data.get('email')
+    entered_password = data.get('password')  # Correctly get the password
 
     # Basic validation
-    if not email:
+    if not email or not entered_password:
         return jsonify({"error": "Email and password are required"}), 400
 
     # Find user by email
     user = users_collection.find_one({"email": email})
+
     if not user:
         return jsonify({"error": "Invalid email or password"}), 401
 
-    return jsonify({"message": "Login successful", "user_details": {"email": user['email'], "full_name": user['full_name'],'phone':user['phone']}}), 200
+    # Check if the entered password matches the stored password
+    if user["password"] != entered_password:
+        return jsonify({"error": "Invalid email or password"}), 401
+
+    # Successful login
+    return jsonify({
+        "message": "Login successful",
+        "user_details": {
+            "email": user['email'],
+            "full_name": user.get('full_name', ''),
+            "phone": user.get('phone', '')
+        }
+    }), 200
 
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -50,6 +64,7 @@ def signup():
     email = data.get('email')
     full_name = data.get('full_name')
     phone = data.get('phone')
+    password=data.get('password')
 
     # Check if email already exists
     existing_user = users_collection.find_one({"email": email})
@@ -59,8 +74,10 @@ def signup():
     # Insert new user
     user = {
         "email": email,
+        "password": password,
         "full_name": full_name,
         "phone": phone
+         
     }
     users_collection.insert_one(user)
 
