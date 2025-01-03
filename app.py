@@ -4,6 +4,7 @@ from flask_cors import CORS
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
+import random
 
 app = Flask(__name__)
 CORS(app)
@@ -16,6 +17,14 @@ client = MongoClient(mongo_uri)
 db = client.HotelWebsite
 users_collection = db.users
 
+
+# Function to generate a unique 6-digit booking ID
+def generate_booking_id():
+    while True:
+        booking_id = str(random.randint(100000, 999999))  # Generate a 6-digit random number
+        # Check if the booking ID already exists in the database
+        if not users_collection.find_one({"booked_details.booking_id": booking_id}):
+            return booking_id
 @app.route('/')
 def home():
     return "Hello, Flask on Vercel! "
@@ -67,25 +76,36 @@ def checkout():
     if not email or not booked_details:
         return jsonify({"error": "Email and checkout details are required"}), 400
 
+    # Generate a unique booking ID
+    booking_id = generate_booking_id()  # Assumes the generate_booking_id() function exists
+
+    # Add the booking ID to the booked_details
+    booked_details['booking_id'] = booking_id
+
     # Check if user exists in the database
     user = users_collection.find_one({"email": email})
 
     if user:
-        # If user exists, append the new checkout details
-        if 'booked_details' not in user:
-            user['booked_details'] = []  # Initialize if not present
-        user['booked_details'].append(booked_details)
-        # Update the user record in the database
-        users_collection.update_one({"email": email}, {"$set": {"booked_details": user['booked_details']}})
-        return jsonify({"message": "Checkout details appended successfully"}), 200
+        # Append the new checkout details to the user's booked_details
+        users_collection.update_one(
+            {"email": email},
+            {"$push": {"booked_details": booked_details}}
+        )
+        return jsonify({
+            "message": "Checkout details appended successfully",
+            "booking_id": booking_id
+        }), 200
     else:
-        # If user does not exist, create a new record
+        # Create a new record for the user
         checkout_data = {
             "email": email,
             "booked_details": [booked_details]  # Store in a list
         }
         users_collection.insert_one(checkout_data)
-        return jsonify({"message": "Checkout details saved successfully"}), 201
+        return jsonify({
+            "message": "Checkout details saved successfully",
+            "booking_id": booking_id
+        }), 201
 
 @app.route('/checkout/filter', methods=['GET'])
 def filter_booked_details():
