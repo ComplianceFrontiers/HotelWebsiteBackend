@@ -65,6 +65,8 @@ def signup():
     full_name = data.get('full_name')
     phone = data.get('phone')
     password=data.get('password')
+    booked_dates=data.get('booked_dates',[])
+
 
     # Check if email already exists
     existing_user = users_collection.find_one({"email": email})
@@ -76,7 +78,8 @@ def signup():
         "email": email,
         "password": password,
         "full_name": full_name,
-        "phone": phone
+        "phone": phone,
+        "booked_dates":booked_dates
          
     }
     users_collection.insert_one(user)
