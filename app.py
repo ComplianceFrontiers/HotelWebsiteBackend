@@ -58,6 +58,27 @@ def login():
         }
     }), 200
 
+@app.route('/booking-details_wrt_email', methods=['GET'])
+def get_booking_details_wrt_email():
+    email = request.args.get('email')  # Get email from query parameters
+
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    # Find user by email
+    user = users_collection.find_one({"email": email})
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    # Get booking details
+    booked_details = user.get("booked_details", [])
+
+    return jsonify({
+        "message": "Booking details retrieved successfully",
+        "booked_details": booked_details
+    }), 200
+
 @app.route('/signup', methods=['POST'])
 def signup():
     data = request.json  # Get JSON data from the request
