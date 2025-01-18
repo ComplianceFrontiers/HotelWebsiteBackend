@@ -177,6 +177,47 @@ def get_booking_details():
     else:
         return jsonify({"error": "Booking ID does not exist"}), 404
 
+@app.route('/update-booking-status', methods=['POST'])
+def update_booking_status():
+    data = request.json
+    email = data.get('email')  # Get email from the request
+    booking_id = data.get('booking_id')  # Get booking_id from the request
+    paid = data.get('paid')  # Get 'paid' status from the request
+    approved = data.get('approved')  # Get 'approved' status from the request
+
+    # Basic validation
+    if not email or not booking_id:
+        return jsonify({"error": "Email and Booking ID are required"}), 400
+
+    if paid is None or approved is None:
+        return jsonify({"error": "Paid and Approved status are required"}), 400
+
+    # Search for the user by email and booking_id
+    user = users_collection.find_one({"email": email, "booked_details.booking_id": booking_id})
+
+    if user:
+        # Find the specific booking details
+        booked_details = next(
+            (booking for booking in user['booked_details'] if booking['booking_id'] == booking_id),
+            None
+        )
+
+        if booked_details:
+            # Update the 'paid' and 'approved' fields
+            booked_details['paid'] = paid
+            booked_details['approved'] = approved
+
+            # Save the updated user document back to the database
+            users_collection.update_one(
+                {"_id": user["_id"], "booked_details.booking_id": booking_id},
+                {"$set": {"booked_details.$.paid": paid, "booked_details.$.approved": approved}}
+            )
+
+            return jsonify({"message": "Booking status updated successfully"}), 200
+        else:
+            return jsonify({"error": "Booking not found"}), 404
+    else:
+        return jsonify({"error": "User or booking not found"}), 404
 
 @app.route('/checkout/filter', methods=['GET'])
 def filter_booked_details():
