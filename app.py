@@ -5,6 +5,9 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
 import random
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 CORS(app)
@@ -16,6 +19,135 @@ mongo_uri = os.getenv('MONGO_URI')
 client = MongoClient(mongo_uri)
 db = client.HotelWebsite
 users_collection = db.users
+
+
+DISPLAY_NAME = "BCC Rentals"
+
+def send_email_to_admin_to_approve(email, booking_id):
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+
+    admin_email = "connect@chesschamps.us"
+    sender_password = "iyln tkpp vlpo sjep"  # Use your app-specific password here
+    subject = "New Submit Request From BCC Rentals"
+
+    # Updated body to include the link and booking ID
+    body = (
+        f"Dear Admin,\n\n"
+        f"You have received a new request from the website.\n\n"
+        f"Booking ID: {booking_id}\n\n"
+        f"Booking made with this email: {email}\n\n"
+        f"Please visit the following link to approve or reject the request:\n"
+        f"https://bcc-facility-rental.vercel.app/admin\n\n"
+        f"Best regards,\n"
+        f"The BCC Rentals Team"
+    )
+
+    # Email setup
+    msg = MIMEMultipart()
+    msg['From'] = f'{DISPLAY_NAME} <{admin_email}>'
+    msg['To'] = "connect@chesschamps.us"
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        # Send email via Gmail's SMTP server
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(admin_email, sender_password)
+        text = msg.as_string()
+        server.sendmail(admin_email, email, text)
+        print(f"Email sent successfully to {email}")
+    except Exception as e:
+        print(f"Failed to send email. Error: {e}")
+    finally:
+        server.quit()
+
+@app.route('/send_email_to_admin_to_approve', methods=['POST'])
+def send_email_to_admin_to_approve():
+    try:
+        # Parse the incoming JSON data
+        data = request.json
+        email = data.get('email', '')
+        booking_id=data.get('booking_id', '')
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+ 
+        
+        # Call the send_email function
+        email_sent = send_email_to_admin_to_approve(email, booking_id)
+        
+        if email_sent:
+            return jsonify({"success": "Email sent successfully"}), 200
+        else:
+            return jsonify({"error": "Failed to send email"}), 500
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+def send_email_to_user_that_we_got_request(email, booking_id):
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+
+    admin_email = "connect@chesschamps.us"
+    sender_password = "iyln tkpp vlpo sjep"  # Use your app-specific password here
+    subject = "Your Booking Request Has Been Received"
+
+    # Email body for the user
+    body = (
+        f"Dear User,\n\n"
+        f"We have received your booking request successfully. Your request has been sent to the admin for approval.\n\n"
+        f"Booking ID: {booking_id}\n\n"
+        f"We will get back to you once your request is approved.\n\n"
+        f"You can also check the status of your booking in My Dashboard:\n"
+        f"Best regards,\n"
+        f"The BCC Rentals Team"
+    )
+
+    # Email setup
+    msg = MIMEMultipart()
+    msg['From'] = f'{DISPLAY_NAME} <{admin_email}>'
+    msg['To'] = email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        # Send email via Gmail's SMTP server
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(admin_email, sender_password)
+        text = msg.as_string()
+        server.sendmail(admin_email, email, text)
+        print(f"Email sent successfully to {email}")
+    except Exception as e:
+        print(f"Failed to send email. Error: {e}")
+    finally:
+        server.quit()
+
+@app.route('/send_email_to_user_that_we_got_request', methods=['POST'])
+def send_email_to_user_that_we_got_request():
+    try:
+        # Parse the incoming JSON data
+        data = request.json
+        email = data.get('email', '')
+        booking_id=data.get('booking_id', '')
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+ 
+        
+        # Call the send_email function
+        email_sent = send_email_to_user_that_we_got_request(email, booking_id)
+        
+        if email_sent:
+            return jsonify({"success": "Email sent successfully"}), 200
+        else:
+            return jsonify({"error": "Failed to send email"}), 500
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 # Function to generate a unique 6-digit booking ID
@@ -189,9 +321,7 @@ def update_booking_status():
     if not email or not booking_id:
         return jsonify({"error": "Email and Booking ID are required"}), 400
 
-    if paid is None or approved is None:
-        return jsonify({"error": "Paid and Approved status are required"}), 400
-
+   
     # Search for the user by email and booking_id
     user = users_collection.find_one({"email": email, "booked_details.booking_id": booking_id})
 
