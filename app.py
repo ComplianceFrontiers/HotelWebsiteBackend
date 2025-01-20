@@ -184,7 +184,7 @@ def update_booking_status():
     booking_id = data.get('booking_id')  # Get booking_id from the request
     paid = data.get('paid')  # Get 'paid' status from the request
     approved = data.get('approved')  # Get 'approved' status from the request
-
+    reject = data.get('reject',False)
     # Basic validation
     if not email or not booking_id:
         return jsonify({"error": "Email and Booking ID are required"}), 400
@@ -206,11 +206,12 @@ def update_booking_status():
             # Update the 'paid' and 'approved' fields
             booked_details['paid'] = paid
             booked_details['approved'] = approved
+            booked_details['reject'] = reject
 
             # Save the updated user document back to the database
             users_collection.update_one(
                 {"_id": user["_id"], "booked_details.booking_id": booking_id},
-                {"$set": {"booked_details.$.paid": paid, "booked_details.$.approved": approved}}
+                {"$set": {"booked_details.$.paid": paid, "booked_details.$.approved": approved, "booked_details.$.reject": reject}}
             )
 
             return jsonify({"message": "Booking status updated successfully"}), 200
