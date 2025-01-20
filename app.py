@@ -195,9 +195,9 @@ def send_email_to_user_request_got_approved_route():
     try:
         # Parse the incoming JSON data
         data = request.json
-        email = data.get('email', '').strip()
-        booking_id = data.get('booking_id', '').strip()
-        stripe = data.get('stripe', '').strip()  # Stripe field (optional)
+        email = data.get('email', '')
+        booking_id = data.get('booking_id', '')
+        stripe = data.get('stripe', '') # Stripe field (optional)
 
         # Validate input
         if not email:
