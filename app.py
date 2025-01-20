@@ -494,10 +494,7 @@ def already_booked_dates():
         # Add the user's booked dates to the result only if there's a match for the room_type
         if booked_dates:
             result.append({"booked_dates": booked_dates})
-
-    if not result:
-        return jsonify({"message": "No bookings found for the specified room type"}), 404
-
+ 
     return jsonify(result), 200
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80)
