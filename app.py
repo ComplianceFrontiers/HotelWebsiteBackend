@@ -23,7 +23,7 @@ users_collection = db.users
 
 DISPLAY_NAME = "BCC Rentals"
 
-def send_email_to_admin_to_approve(email, booking_id):
+def send_email_to_admin_to_approve1(email, booking_id):
     import smtplib
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
@@ -70,13 +70,16 @@ def send_email_to_admin_to_approve():
         # Parse the incoming JSON data
         data = request.json
         email = data.get('email', '')
-        booking_id=data.get('booking_id', '')
+        booking_id = data.get('booking_id', '')
+        
         if not email:
             return jsonify({"error": "Email is required"}), 400
- 
+        
+        if not booking_id:
+            return jsonify({"error": "Booking ID is required"}), 400
         
         # Call the send_email function
-        email_sent = send_email_to_admin_to_approve(email, booking_id)
+        email_sent = send_email_to_admin_to_approve1(email, booking_id)
         
         if email_sent:
             return jsonify({"success": "Email sent successfully"}), 200
@@ -85,7 +88,6 @@ def send_email_to_admin_to_approve():
     
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
 
 def send_email_to_user_that_we_got_request(email, booking_id):
     import smtplib
