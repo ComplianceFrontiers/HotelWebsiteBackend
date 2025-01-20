@@ -122,9 +122,6 @@ def send_email_to_admin(email, booking_id):
 
 @app.route('/send_email_to_admin_to_approve', methods=['POST'])
 def send_email_to_admin_to_approve():
-    """
-    API route to notify the admin about a new booking request for approval.
-    """
     try:
         # Parse the incoming JSON data
         data = request.json
@@ -149,26 +146,27 @@ def send_email_to_admin_to_approve():
         print(f"Error in /send_email_to_admin_to_approve: {e}")
         return jsonify({"error": str(e)}), 400
 
-def send_email_to_user_request_got_approved(email, booking_id):
-    import smtplib
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-
+ 
+def send_email_to_user_after_approval(email, booking_id, stripe=None):
+ 
     admin_email = "connect@chesschamps.us"
-    sender_password = "iyln tkpp vlpo sjep"  # Use your app-specific password here
-    subject = "Your Booking Request Has Been Received"
+    sender_password = "iyln tkpp vlpo sjep"  # Replace with a secure app-specific password
+    subject = "Your Booking Request Has Been Approved"
 
-    # Email body for the user
     body = (
         f"Dear User,\n\n"
-        f"We have received your booking request successfully. Your request has been sent to the admin for approval.\n\n"
+        f"Your booking request has been approved successfully. We are excited to confirm your booking.\n\n"
         f"Booking ID: {booking_id}\n\n"
-        f"We will get back to you once your request is approved.\n\n"
-        f"You can also check the status of your booking in My Dashboard:\n"
-        f"Best regards,\n"
-        f"The BCC Rentals Team"
+        f"Thank you for your patience. You can now proceed with your booking.\n\n"
     )
 
+    # If stripe field is provided, add the payment information to the email
+    if stripe:
+        body += f"\n\nYou can make your payment using the following link: {stripe}\n"
+    body += (
+        f"\nBest regards,\n"
+        f"The BCC Rentals Team"
+    )
     # Email setup
     msg = MIMEMultipart()
     msg['From'] = f'{DISPLAY_NAME} <{admin_email}>'
@@ -184,33 +182,40 @@ def send_email_to_user_request_got_approved(email, booking_id):
         text = msg.as_string()
         server.sendmail(admin_email, email, text)
         print(f"Email sent successfully to {email}")
+        return True
     except Exception as e:
         print(f"Failed to send email. Error: {e}")
+        return False
     finally:
         server.quit()
 
 @app.route('/send_email_to_user_request_got_approved', methods=['POST'])
-def send_email_to_user_request_got_approved():
+def send_email_to_user_request_got_approved_route():
+   
     try:
         # Parse the incoming JSON data
         data = request.json
-        email = data.get('email', '')
-        booking_id=data.get('booking_id', '')
+        email = data.get('email', '').strip()
+        booking_id = data.get('booking_id', '').strip()
+        stripe = data.get('stripe', '').strip()  # Stripe field (optional)
+
+        # Validate input
         if not email:
             return jsonify({"error": "Email is required"}), 400
- 
-        
-        # Call the send_email function
-        email_sent = send_email_to_user_request_got_approved(email, booking_id)
-        
+        if not booking_id:
+            return jsonify({"error": "Booking ID is required"}), 400
+
+        # Call the function to send an email to the user
+        email_sent = send_email_to_user_after_approval(email, booking_id, stripe)
+
         if email_sent:
             return jsonify({"success": "Email sent successfully"}), 200
         else:
             return jsonify({"error": "Failed to send email"}), 500
-    
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
 
+    except Exception as e:
+        print(f"Error in /send_email_to_user_request_got_approved: {e}")
+        return jsonify({"error": str(e)}), 400
 # Function to generate a unique 6-digit booking ID
 def generate_booking_id():
     while True:
