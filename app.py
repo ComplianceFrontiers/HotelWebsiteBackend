@@ -78,22 +78,22 @@ def send_email_to_user():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-def send_email_to_user_that_we_got_request(email, booking_id):
-    import smtplib
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-
+def send_email_to_admin(email, booking_id):
+    """
+    Sends an email to the admin for approval of a booking request.
+    """
     admin_email = "connect@chesschamps.us"
-    sender_password = "iyln tkpp vlpo sjep"  # Use your app-specific password here
-    subject = "Your Booking Request Has Been Received"
+    sender_password = "iyln tkpp vlpo sjep"  # Replace with a secure app-specific password
+    subject = "New Submit Request From BCC Rentals"
 
-    # Email body for the user
+    # Updated body to include the link and booking ID
     body = (
-        f"Dear User,\n\n"
-        f"We have received your booking request successfully. Your request has been sent to the admin for approval.\n\n"
+        f"Dear Admin,\n\n"
+        f"You have received a new request from the website.\n\n"
         f"Booking ID: {booking_id}\n\n"
-        f"We will get back to you once your request is approved.\n\n"
-        f"You can also check the status of your booking in My Dashboard:\n"
+        f"Booking made with this email: {email}\n\n"
+        f"Please visit the following link to approve or reject the request:\n"
+        f"https://bcc-facility-rental.vercel.app/admin\n\n"
         f"Best regards,\n"
         f"The BCC Rentals Team"
     )
@@ -101,7 +101,7 @@ def send_email_to_user_that_we_got_request(email, booking_id):
     # Email setup
     msg = MIMEMultipart()
     msg['From'] = f'{DISPLAY_NAME} <{admin_email}>'
-    msg['To'] = email
+    msg['To'] = "connect@chesschamps.us"  # This should always go to the admin's email
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
 
@@ -110,36 +110,44 @@ def send_email_to_user_that_we_got_request(email, booking_id):
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(admin_email, sender_password)
-        text = msg.as_string()
-        server.sendmail(admin_email, email, text)
-        print(f"Email sent successfully to {email}")
+        server.sendmail(admin_email, "connect@chesschamps.us", msg.as_string())
+        print(f"Email sent successfully to admin about booking ID {booking_id}")
+        return True
     except Exception as e:
         print(f"Failed to send email. Error: {e}")
+        return False
     finally:
         server.quit()
 
-@app.route('/send_email_to_user_that_we_got_request', methods=['POST'])
-def send_email_to_user_that_we_got_request():
+
+@app.route('/send_email_to_admin_to_approve', methods=['POST'])
+def send_email_to_admin_to_approve():
+    """
+    API route to notify the admin about a new booking request for approval.
+    """
     try:
         # Parse the incoming JSON data
         data = request.json
-        email = data.get('email', '')
-        booking_id=data.get('booking_id', '')
+        email = data.get('email', '').strip()
+        booking_id = data.get('booking_id', '').strip()
+
+        # Validate input
         if not email:
             return jsonify({"error": "Email is required"}), 400
- 
-        
-        # Call the send_email function
-        email_sent = send_email_to_user_that_we_got_request(email, booking_id)
-        
+        if not booking_id:
+            return jsonify({"error": "Booking ID is required"}), 400
+
+        # Call the function to send an email to the admin
+        email_sent = send_email_to_admin(email, booking_id)
+
         if email_sent:
             return jsonify({"success": "Email sent successfully"}), 200
         else:
             return jsonify({"error": "Failed to send email"}), 500
-    
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
 
+    except Exception as e:
+        print(f"Error in /send_email_to_admin_to_approve: {e}")
+        return jsonify({"error": str(e)}), 400
 
 def send_email_to_user_request_got_approved(email, booking_id):
     import smtplib
