@@ -465,30 +465,39 @@ def get_all_users():
 
 @app.route('/users/already_booked_dates', methods=['GET'])
 def already_booked_dates():
-    # Fetch all users from the database and extract booked_dates
-    users = users_collection.find({}, {"_id": 0, "booked_details.booked_dates": 1})  # Fetch only booked_dates fields
+    # Get the roomType from the request args
+    room_type = request.args.get('room_type')  # Extract the roomType query parameter
+    
+    if not room_type:
+        return jsonify({"error": "roomType is required"}), 400
+
+    # Fetch all users from the database and filter based on room_type
+    users = users_collection.find({"booked_details.room_type": room_type}, {"_id": 0, "booked_details.booked_dates": 1, "booked_details.room_type": 1})  # Fetch only relevant fields
 
     # Prepare a response containing the booked dates
     result = []
     for user in users:
-        # Initialize a list to hold all booked dates
+        # Initialize a list to hold all booked dates for the specific room type
         booked_dates = []
-        
+
         # Extract booked dates from booked_details
         for booked_detail in user.get("booked_details", []):
-            for booked_date in booked_detail.get("booked_dates", []):
-                # Append only date, startTime, and endTime to the result
-                booked_dates.append({
-                    "date": booked_date["date"],
-                    "startTime": booked_date["startTime"],
-                    "endTime": booked_date["endTime"]
-                })
-        
-        # Add the user's booked dates to the result
+            if booked_detail.get("room_type") == room_type:  # Check if the room type matches
+                for booked_date in booked_detail.get("booked_dates", []):
+                    # Append only date, startTime, and endTime to the result
+                    booked_dates.append({
+                        "date": booked_date["date"],
+                        "startTime": booked_date["startTime"],
+                        "endTime": booked_date["endTime"]
+                    })
+
+        # Add the user's booked dates to the result only if there's a match for the room_type
         if booked_dates:
             result.append({"booked_dates": booked_dates})
 
-    return jsonify(result), 200
+    if not result:
+        return jsonify({"message": "No bookings found for the specified room type"}), 404
 
+    return jsonify(result), 200
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80)
