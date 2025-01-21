@@ -23,14 +23,19 @@ users_collection = db.users
 
 DISPLAY_NAME = "BCC Rentals"
 
-def send_email(email, subject, body):
+def send_email(email, subject, body, is_html=False):
     admin_email = "connect@chesschamps.us"
-    sender_password = "iyln tkpp vlpo sjep"
+    sender_password = "iyln tkpp vlpo sjep"  # Replace with a secure app-specific password
+
     msg = MIMEMultipart()
-    msg['From'] = f'{DISPLAY_NAME} <{admin_email}>'
+    msg['From'] = admin_email
     msg['To'] = email
     msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
+
+    if is_html:
+        msg.attach(MIMEText(body, 'html'))
+    else:
+        msg.attach(MIMEText(body, 'plain'))
 
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -59,16 +64,17 @@ def send_email_to_user():
             return jsonify({"error": "Booking ID is required"}), 400
 
         body = (
-            f"Dear User,\n\n"
-            f"We have received your booking request successfully. Your request has been sent to the admin for approval.\n\n"
-            f"Booking ID: {booking_id}\n\n"
-            f"We will get back to you once your request is approved.\n\n"
-            f"You can also check the status of your booking in My Dashboard.\n\n"
-            f"Best regards,\n"
+            f"Dear User,<br><br>"
+            f"We have received your booking request successfully. Your request has been sent to the admin for approval.<br><br>"
+            f"<strong>Booking ID:</strong> {booking_id}<br><br>"
+            f"We will get back to you once your request is approved.<br><br>"
+            f"You can also check the status of your booking in "
+            f"<a href='https://bcc-facility-rental.vercel.app/dashboard'>My Dashboard</a>.<br><br>"
+            f"Best regards,<br>"
             f"The BCC Rentals Team"
         )
         subject = "Your Booking Request Has Been Received"
-        email_sent = send_email(email, subject, body)
+        email_sent = send_email(email, subject, body, is_html=True)
 
         if email_sent:
             return jsonify({"success": "Email sent successfully"}), 200
@@ -84,7 +90,7 @@ def send_email_to_admin(email, booking_id):
     """
     admin_email = "connect@chesschamps.us"
     sender_password = "iyln tkpp vlpo sjep"  # Replace with a secure app-specific password
-    subject = "New Submit Request From BCC Rentals"
+    subject = "New Event Request From BCC Rentals"
 
     # Updated body to include the link and booking ID
     body = (
