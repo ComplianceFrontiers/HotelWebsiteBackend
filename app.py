@@ -216,7 +216,80 @@ def send_email_to_user_request_got_approved_route():
     except Exception as e:
         print(f"Error in /send_email_to_user_request_got_approved: {e}")
         return jsonify({"error": str(e)}), 400
-# Function to generate a unique 6-digit booking ID
+
+
+def send_email_to_user_after_approval(email, booking_id, note):
+ 
+    admin_email = "connect@chesschamps.us"
+    sender_password = "iyln tkpp vlpo sjep"  # Replace with a secure app-specific password
+    subject = "Your booking request has been rejected for the following reason."
+
+    body = (
+        f"Dear User,\n\n"
+        f"Your booking request has been rejected "
+        f"Booking ID: {booking_id}\n\n"
+    )
+
+    # If stripe field is provided, add the payment information to the email
+    if note:
+        body += f"\n\nRejection Remark:: {note}\n"
+    body += (
+       f"\n We apologize the inconvenience. Pls feel free to reach us at info@bellevuecc.org,\n\n"
+        f"\nBest regards,\n"
+        f"The BCC Rentals Team"
+    )
+    # Email setup
+    msg = MIMEMultipart()
+    msg['From'] = f'{DISPLAY_NAME} <{admin_email}>'
+    msg['To'] = email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        # Send email via Gmail's SMTP server
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(admin_email, sender_password)
+        text = msg.as_string()
+        server.sendmail(admin_email, email, text)
+        print(f"Email sent successfully to {email}")
+        return True
+    except Exception as e:
+        print(f"Failed to send email. Error: {e}")
+        return False
+    finally:
+        server.quit()
+
+@app.route('/send_email_to_user_request_got_rejected', methods=['POST'])
+def send_email_to_user_request_got_rejected_route():
+   
+    try:
+        # Parse the incoming JSON data
+        data = request.json
+        email = data.get('email', '')
+        booking_id = data.get('booking_id', '')
+        note = data.get('note', '') 
+
+        # Validate input
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+        if not booking_id:
+            return jsonify({"error": "Booking ID is required"}), 400
+
+        # Call the function to send an email to the user
+        email_sent = send_email_to_user_after_approval(email, booking_id, note)
+
+        if email_sent:
+            return jsonify({"success": "Email sent successfully"}), 200
+        else:
+            return jsonify({"error": "Failed to send email"}), 500
+
+    except Exception as e:
+        print(f"Error in /send_email_to_user_request_got_rejected: {e}")
+        return jsonify({"error": str(e)}), 400
+
+
+
 def generate_booking_id():
     while True:
         booking_id = str(random.randint(100000, 999999))  # Generate a 6-digit random number
