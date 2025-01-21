@@ -232,7 +232,7 @@ def send_email_to_user_after_approval(email, booking_id, note):
 
     # If stripe field is provided, add the payment information to the email
     if note:
-        body += f"\n\nRejection Remark:: {note}\n"
+        body += f"Rejection Remark:: {note}\n"
     body += (
        f"\n We apologize the inconvenience. Pls feel free to reach us at info@bellevuecc.org,\n\n"
         f"\nBest regards,\n"
