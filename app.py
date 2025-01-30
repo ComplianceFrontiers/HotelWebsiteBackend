@@ -498,6 +498,9 @@ def get_all_users():
     # Convert MongoDB documents to a list of dictionaries
     users_list = [user for user in users]  # Convert each user document to a dictionary
 
+    # Filter out the user with email "admin@gmail.com"
+    users_list = [user for user in users_list if user.get('email') != "admin@gmail.com"]
+
     return jsonify(users_list), 200
 
 @app.route('/users/already_booked_dates', methods=['GET'])
