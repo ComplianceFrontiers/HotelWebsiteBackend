@@ -498,7 +498,17 @@ def get_all_users():
     # Convert MongoDB documents to a list of dictionaries
     users_list = [user for user in users]  # Convert each user document to a dictionary
 
-    # Filter out the user with email "admin@gmail.com"
+    return jsonify(users_list), 200
+
+
+
+@app.route('/users_without_admin', methods=['GET'])
+def users_without_admin():
+    # Fetch all users from the database, excluding the _id field
+    users = users_collection.find({}, {"_id": 0})  # 0 to exclude _id
+    users_list = [user for user in users]
+    # Convert MongoDB documents to a list of dictionaries
+ 
     users_list = [user for user in users_list if user.get('email') != "admin@gmail.com"]
 
     return jsonify(users_list), 200
