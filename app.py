@@ -223,49 +223,7 @@ def send_email_to_user_request_got_approved_route():
         print(f"Error in /send_email_to_user_request_got_approved: {e}")
         return jsonify({"error": str(e)}), 400
 
-
-def send_email_to_user_after_approval(email, booking_id, note):
  
-    admin_email = "connect@chesschamps.us"
-    sender_password = "iyln tkpp vlpo sjep"  # Replace with a secure app-specific password
-    subject = "Your booking request has been rejected for the following reason."
-
-    body = (
-        f"Dear User,\n\n"
-        f"Your booking request has been rejected "
-        f"Booking ID: {booking_id}\n\n"
-    )
-
-    # If stripe field is provided, add the payment information to the email
-    if note:
-        body += f"Rejection Remark:: {note}\n"
-    body += (
-       f"\n We apologize the inconvenience. Pls feel free to reach us at info@bellevuecc.org,\n\n"
-        f"\nBest regards,\n"
-        f"The BCC Rentals Team"
-    )
-    # Email setup
-    msg = MIMEMultipart()
-    msg['From'] = f'{DISPLAY_NAME} <{admin_email}>'
-    msg['To'] = email
-    msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
-
-    try:
-        # Send email via Gmail's SMTP server
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(admin_email, sender_password)
-        text = msg.as_string()
-        server.sendmail(admin_email, email, text)
-        print(f"Email sent successfully to {email}")
-        return True
-    except Exception as e:
-        print(f"Failed to send email. Error: {e}")
-        return False
-    finally:
-        server.quit()
-
 @app.route('/send_email_to_user_request_got_rejected', methods=['POST'])
 def send_email_to_user_request_got_rejected_route():
    
