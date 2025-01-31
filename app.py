@@ -252,6 +252,47 @@ def send_email_to_user_request_got_rejected_route():
         print(f"Error in /send_email_to_user_request_got_rejected: {e}")
         return jsonify({"error": str(e)}), 400
 
+@app.route('/delete_booking_admin', methods=['POST'])
+def delete_booking_admin():
+    try:
+        # Parse the incoming JSON data
+        data = request.json
+        email = data.get('email', '')
+        booking_id = data.get('booking_id', '')
+
+        # Validate input
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+        if not booking_id:
+            return jsonify({"error": "Booking ID is required"}), 400
+
+        # Find the user in the collection
+        user = users_collection.find_one({"email": email})
+
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Find the booking in the user's 'booked_details' array
+        booking_to_delete = None
+        for booking in user.get('booked_details', []):
+            if booking.get('booking_id') == booking_id:
+                booking_to_delete = booking
+                break
+
+        if not booking_to_delete:
+            return jsonify({"error": "Booking ID not found for this user"}), 404
+
+        # Remove the booking from the 'booked_details' array
+        users_collection.update_one(
+            {"email": email},
+            {"$pull": {"booked_details": {"booking_id": booking_id}}}
+        )
+
+        return jsonify({"success": "Booking deleted successfully"}), 200
+
+    except Exception as e:
+        print(f"Error in /delete_booking: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 def generate_booking_id():
