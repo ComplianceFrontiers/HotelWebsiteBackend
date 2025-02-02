@@ -4,10 +4,12 @@ from flask_cors import CORS
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
+import secrets
 import random
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 CORS(app)
@@ -19,7 +21,7 @@ mongo_uri = os.getenv('MONGO_URI')
 client = MongoClient(mongo_uri)
 db = client.HotelWebsite
 users_collection = db.users
-
+password_reset_tokens_collection = db.password_reset_tokens
 
 DISPLAY_NAME = "BCC Rentals"
 
@@ -333,6 +335,85 @@ def login():
             "phone": user.get('phone', '')
         }
     }), 200
+
+@app.route('/forgot-password', methods=['POST'])
+def forgot_password():
+    data = request.json
+    email = data.get('email')
+
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    # Check if the user exists
+    user = users_collection.find_one({"email": email})
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    # Generate a unique reset token
+    reset_token = secrets.token_urlsafe(32)
+    expiration_time = datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
+
+    # Save the token in the database
+    password_reset_tokens_collection.insert_one({
+        "email": email,
+        "token": reset_token,
+        "expires_at": expiration_time
+    })
+
+    # Send the reset link to the user's email
+    reset_link = f"http://yourfrontend.com/reset-password?token={reset_token}"
+    email_body = f"""
+    <p>You requested a password reset. Click the link below to reset your password:</p>
+    <p><a href="{reset_link}">Reset Password</a></p>
+    <p>This link will expire in 1 hour.</p>
+    """
+
+    try:
+        # Send email
+        msg = MIMEText(email_body, "html")
+        msg["Subject"] = "Password Reset Request"
+        msg["From"] = "connect@chesschamps.us"
+        msg["To"] = email
+
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login("connect@chesschamps.us", "iyln tkpp vlpo sjep")
+            server.sendmail("connect@chesschamps.us", [email], msg.as_string())
+
+        return jsonify({"message": "Password reset link sent to your email"}), 200
+    except Exception as e:
+        return jsonify({"error": "Failed to send email", "details": str(e)}), 500
+
+@app.route('/reset-password', methods=['POST'])
+def reset_password():
+    data = request.json
+    token = data.get('token')
+    new_password = data.get('new_password')
+
+    if not token or not new_password:
+        return jsonify({"error": "Token and new password are required"}), 400
+
+    # Find the token in the database
+    reset_record = password_reset_tokens_collection.find_one({"token": token})
+
+    if not reset_record:
+        return jsonify({"error": "Invalid or expired token"}), 400
+
+    # Check if the token has expired
+    if datetime.utcnow() > reset_record["expires_at"]:
+        return jsonify({"error": "Token has expired"}), 400
+
+    # Update the user's password
+    users_collection.update_one(
+        {"email": reset_record["email"]},
+        {"$set": {"password": new_password}}
+    )
+
+    # Delete the used token
+    password_reset_tokens_collection.delete_one({"token": token})
+
+    return jsonify({"message": "Password reset successfully"}), 200
+
 
 @app.route('/booking-details_wrt_email', methods=['GET'])
 def get_booking_details_wrt_email():
