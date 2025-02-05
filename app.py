@@ -10,7 +10,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
-
+import base64
 app = Flask(__name__)
 CORS(app)
 load_dotenv()
@@ -306,6 +306,37 @@ def generate_booking_id():
 @app.route('/')
 def home():
     return "Hello, Flask on Vercel! "
+
+
+@app.route('/upload-document_non-profit', methods=['POST'])
+def upload_document_non_profit():
+    data = request.json
+    email = data.get('email')  # Get email from the request
+    image_data = data.get('image')  # Get image (Base64 encoded)
+
+    # Basic validation
+    if not email or not image_data:
+        return jsonify({"error": "Email and image are required"}), 400
+
+    # Convert Base64 to binary data (optional: if needed for file processing)
+    try:
+        image_binary = base64.b64decode(image_data)
+    except Exception:
+        return jsonify({"error": "Invalid image format"}), 400
+
+    # Find user by email
+    user = users_collection.find_one({"email": email})
+
+    if user:
+        # Update or insert the document_uploaded field
+        users_collection.update_one(
+            {"email": email},
+            {"$set": {"document_uploaded": image_data}}
+        )
+        return jsonify({"success": True, "message": "Document uploaded successfully"}), 200
+    else:
+        return jsonify({"error": "User not found"}), 404
+    
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json
