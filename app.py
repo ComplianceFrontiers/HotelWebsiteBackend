@@ -686,7 +686,7 @@ def users_without_admin():
     users_list = [user for user in users]
     # Convert MongoDB documents to a list of dictionaries
  
-    users_list = [user for user in users_list if user.get('Admin') == True ]
+    users_list = [user for user in users_list if not user.get('Admin') == True ]
 
     return jsonify(users_list), 200
 
