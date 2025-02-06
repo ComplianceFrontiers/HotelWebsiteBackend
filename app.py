@@ -592,16 +592,18 @@ def get_booking_details():
 @app.route('/update-booking-status', methods=['POST'])
 def update_booking_status():
     data = request.json
+    Admin_name = data.get('Admin_name') 
+    Admin_email = data.get('Admin_email') 
     email = data.get('email')  # Get email from the request
     booking_id = data.get('booking_id')  # Get booking_id from the request
     paid = data.get('paid')  # Get 'paid' status from the request
     approved = data.get('approved')  # Get 'approved' status from the request
-    reject = data.get('reject',False)
+    reject = data.get('reject', False)  # Default to False if not provided
+
     # Basic validation
     if not email or not booking_id:
         return jsonify({"error": "Email and Booking ID are required"}), 400
 
-   
     # Search for the user by email and booking_id
     user = users_collection.find_one({"email": email, "booked_details.booking_id": booking_id})
 
@@ -613,15 +615,19 @@ def update_booking_status():
         )
 
         if booked_details:
-            # Update the 'paid' and 'approved' fields
-            booked_details['paid'] = paid
-            booked_details['approved'] = approved
-            booked_details['reject'] = reject
+            # Update the 'paid', 'approved', 'reject', 'Admin_name', and 'Admin_email' fields
+            update_fields = {
+                "booked_details.$.paid": paid,
+                "booked_details.$.approved": approved,
+                "booked_details.$.reject": reject,
+                "booked_details.$.Admin_name": Admin_name,
+                "booked_details.$.Admin_email": Admin_email
+            }
 
             # Save the updated user document back to the database
             users_collection.update_one(
                 {"_id": user["_id"], "booked_details.booking_id": booking_id},
-                {"$set": {"booked_details.$.paid": paid, "booked_details.$.approved": approved, "booked_details.$.reject": reject}}
+                {"$set": update_fields}
             )
 
             return jsonify({"message": "Booking status updated successfully"}), 200
