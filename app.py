@@ -468,6 +468,28 @@ def get_booking_details_wrt_email():
         "booked_details": booked_details
     }), 200
 
+@app.route('/get-all-admins', methods=['GET'])
+def get_all_admins():
+    try:
+        # Query to find all users where Admin is True
+        admin_users = list(users_collection.find({"Admin": True}))
+
+        if not admin_users:
+            return jsonify({"message": "No admin users found"}), 404
+
+        # Convert MongoDB ObjectId to string for JSON serialization
+        for user in admin_users:
+            user['_id'] = str(user['_id'])
+
+        return jsonify({
+            "message": "Admin users retrieved successfully",
+            "admin_users": admin_users
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/signup', methods=['POST'])
 def signup():
     data = request.json  # Get JSON data from the request
