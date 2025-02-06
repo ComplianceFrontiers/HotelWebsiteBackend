@@ -363,7 +363,8 @@ def login():
         "user_details": {
             "email": user['email'],
             "full_name": user.get('full_name', ''),
-            "phone": user.get('phone', '')
+            "phone": user.get('phone', ''),
+            "Admin": user.get('Admin', '')
         }
     }), 200
 
