@@ -27,7 +27,7 @@ DISPLAY_NAME = "BCC Rentals"
 
 def send_email(email, subject, body, is_html=False):
     admin_email = "connect@chesschamps.us"
-    sender_password = "iyln tkpp vlpo sjep"  # Replace with a secure app-specific password
+    sender_password = "akln niwh wzra ruzf"  # Replace with a secure app-specific password
 
     msg = MIMEMultipart()
     msg['From'] = admin_email
@@ -91,7 +91,7 @@ def send_email_to_admin(email, booking_id):
     Sends an email to the admin for approval of a booking request.
     """
     admin_email = "connect@chesschamps.us"
-    sender_password = "iyln tkpp vlpo sjep"  # Replace with a secure app-specific password
+    sender_password = "akln niwh wzra ruzf"  # Replace with a secure app-specific password
     subject = "New Event Request From BCC Rentals"
 
     # Updated body to include the link and booking ID
@@ -158,7 +158,7 @@ def send_email_to_admin_to_approve():
 def send_email_to_user_after_approval(email, booking_id, stripe=None):
  
     admin_email = "connect@chesschamps.us"
-    sender_password = "iyln tkpp vlpo sjep"  # Replace with a secure app-specific password
+    sender_password = "akln niwh wzra ruzf"  # Replace with a secure app-specific password
     subject = "Your Booking Request Has Been Approved"
 
     body = (
@@ -410,7 +410,7 @@ def forgot_password():
 
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
-            server.login("connect@chesschamps.us", "iyln tkpp vlpo sjep")
+            server.login("connect@chesschamps.us", "akln niwh wzra ruzf")
             server.sendmail("connect@chesschamps.us", [email], msg.as_string())
 
         return jsonify({"message": "Password reset link sent to your email"}), 200
