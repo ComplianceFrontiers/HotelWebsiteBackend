@@ -24,10 +24,10 @@ users_collection = db.users
 password_reset_tokens_collection = db.password_reset_tokens
 
 DISPLAY_NAME = "BCC Rentals"
+admin_email = os.getenv("EMAIL_USER")  # Replace with your email address
+sender_password = os.getenv("EMAIL_PASSWORD") 
 
 def send_email(email, subject, body, is_html=False):
-    admin_email = "connect@chesschamps.us"
-    sender_password = "akln niwh wzra ruzf"  # Replace with a secure app-specific password
 
     msg = MIMEMultipart()
     msg['From'] = admin_email
@@ -90,8 +90,6 @@ def send_email_to_admin(email, booking_id):
     """
     Sends an email to the admin for approval of a booking request.
     """
-    admin_email = "connect@chesschamps.us"
-    sender_password = "akln niwh wzra ruzf"  # Replace with a secure app-specific password
     subject = "New Event Request From BCC Rentals"
 
     # Updated body to include the link and booking ID
@@ -106,10 +104,9 @@ def send_email_to_admin(email, booking_id):
         f"The BCC Rentals Team"
     )
 
-    # Email setup
     msg = MIMEMultipart()
     msg['From'] = f'{DISPLAY_NAME} <{admin_email}>'
-    msg['To'] = "connect@chesschamps.us"  # This should always go to the admin's email
+    msg['To'] = admin_email  # This should always go to the admin's email
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
 
@@ -118,7 +115,7 @@ def send_email_to_admin(email, booking_id):
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(admin_email, sender_password)
-        server.sendmail(admin_email, "connect@chesschamps.us", msg.as_string())
+        server.sendmail(admin_email,admin_email, msg.as_string())
         print(f"Email sent successfully to admin about booking ID {booking_id}")
         return True
     except Exception as e:
@@ -157,8 +154,8 @@ def send_email_to_admin_to_approve():
  
 def send_email_to_user_after_approval(email, booking_id, stripe=None):
  
-    admin_email = "connect@chesschamps.us"
-    sender_password = "akln niwh wzra ruzf"  # Replace with a secure app-specific password
+    admin_email = os.getenv("EMAIL_USER")  # Replace with your email address
+    sender_password = os.getenv("EMAIL_PASSWORD")  # Replace with a secure app-specific password
     subject = "Your Booking Request Has Been Approved"
 
     body = (
@@ -405,13 +402,13 @@ def forgot_password():
         # Send email
         msg = MIMEText(email_body, "html")
         msg["Subject"] = "Password Reset Request"
-        msg["From"] = "connect@chesschamps.us"
+        msg["From"] =admin_email
         msg["To"] = email
 
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
-            server.login("connect@chesschamps.us", "akln niwh wzra ruzf")
-            server.sendmail("connect@chesschamps.us", [email], msg.as_string())
+            server.login(admin_email, sender_password)
+            server.sendmail(admin_email, [email], msg.as_string())
 
         return jsonify({"message": "Password reset link sent to your email"}), 200
     except Exception as e:
@@ -531,6 +528,14 @@ def checkout():
 
     # Add the booking ID to the booked_details
     booked_details['booking_id'] = booking_id
+
+    if booked_details.get('organization_type') is None:
+        booked_details['organization_type'] = "N/A"
+    if booked_details.get('eventDescription') is None:
+        booked_details['eventDescription'] = "N/A"
+
+    if 'flexible' not in booked_details:
+        booked_details['flexible'] = False
 
     # Check if user exists in the database
     user = users_collection.find_one({"email": email})
