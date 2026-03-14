@@ -92,7 +92,7 @@ def send_email_to_admin(email, booking_id):
     """
     subject = "New Event Request From BCC Rentals"
 
-    # Updated body to include the link and booking ID
+    # Updated body to include the link and booking ID  
     body = (
         f"Dear Admin,\n\n"
         f"You have received a new request from the website.\n\n"
