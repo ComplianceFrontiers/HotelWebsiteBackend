@@ -70,9 +70,6 @@ def send_email_to_user():
             f"We have received your booking request successfully. Your request has been sent to the admin for approval.<br><br>"
             f"<strong>Booking ID:</strong> {booking_id}<br><br>"
             f"We will get back to you once your request is approved.<br><br>"
-            f"You can also check the status of your booking in "
-            f"<a href='https://bcc-facility-rental.vercel.app/dashboard'>My Dashboard</a>.<br><br>"
-            f"Best regards,<br>"
             f"The BCC Rentals Team"
         )
         subject = "Your Booking Request Has Been Received"
