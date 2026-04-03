@@ -24,13 +24,13 @@ users_collection = db.users
 password_reset_tokens_collection = db.password_reset_tokens
 
 DISPLAY_NAME = "BCC Rentals"
-admin_email = os.getenv("EMAIL_USER")  # Replace with your email address
-sender_password = os.getenv("EMAIL_PASSWORD") 
 
 def send_email(email, subject, body, is_html=False):
+    admin_email = "connect@chesschamps.us"
+    sender_password = "akln niwh wzra ruzf"  # Replace with a secure app-specific password
 
     msg = MIMEMultipart()
-    msg['From'] = admin_email
+    msg['From'] = f'Rentals – BCC <{admin_email}>'
     msg['To'] = email
     msg['Subject'] = subject
 
@@ -66,13 +66,21 @@ def send_email_to_user():
             return jsonify({"error": "Booking ID is required"}), 400
 
         body = (
-            f"Dear User,<br><br>"
-            f"We have received your booking request successfully. Your request has been sent to the admin for approval.<br><br>"
+            f"Dear Valued User,<br><br>"
             f"<strong>Booking ID:</strong> {booking_id}<br><br>"
-            f"We will get back to you once your request is approved.<br><br>"
-            f"The BCC Rentals Team"
+            f"Thank you for submitting your booking request through the BCC Rentals portal. "
+            f"This email is to confirm that your request has been received successfully and is currently under review.<br><br>"
+            f"Your request has been forwarded to our administrative team for approval. "
+            f"We are carefully reviewing the details and will notify you as soon as a decision has been made. "
+            f"Please note that your booking is not confirmed until you receive an approval confirmation from us.<br><br>"
+            f"If you have any questions, need to make changes, or would like to provide additional information regarding your request, "
+            f"please feel free to reply to this email. Our team will be happy to assist you.<br><br>"
+            f"We appreciate your patience and thank you for choosing BCC Rentals.<br><br>"
+            f"Warm regards,<br>"
+            f"BCC Rentals Team<br>"
+            f"(302) 762-1391"
         )
-        subject = "Your Booking Request Has Been Received"
+        subject = "Booking Request Received – Under Review"
         email_sent = send_email(email, subject, body, is_html=True)
 
         if email_sent:
@@ -87,9 +95,11 @@ def send_email_to_admin(email, booking_id):
     """
     Sends an email to the admin for approval of a booking request.
     """
+    admin_email = "connect@chesschamps.us"
+    sender_password = "akln niwh wzra ruzf"  # Replace with a secure app-specific password
     subject = "New Event Request From BCC Rentals"
 
-    # Updated body to include the link and booking ID  
+    # Updated body to include the link and booking ID
     body = (
         f"Dear Admin,\n\n"
         f"You have received a new request from the website.\n\n"
@@ -101,9 +111,10 @@ def send_email_to_admin(email, booking_id):
         f"The BCC Rentals Team"
     )
 
+    # Email setup
     msg = MIMEMultipart()
     msg['From'] = f'{DISPLAY_NAME} <{admin_email}>'
-    msg['To'] = admin_email  # This should always go to the admin's email
+    msg['To'] = "connect@chesschamps.us"  # This should always go to the admin's email
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
 
@@ -112,7 +123,7 @@ def send_email_to_admin(email, booking_id):
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(admin_email, sender_password)
-        server.sendmail(admin_email,admin_email, msg.as_string())
+        server.sendmail(admin_email, "connect@chesschamps.us", msg.as_string())
         print(f"Email sent successfully to admin about booking ID {booking_id}")
         return True
     except Exception as e:
@@ -149,32 +160,39 @@ def send_email_to_admin_to_approve():
         return jsonify({"error": str(e)}), 400
 
  
-def send_email_to_user_after_approval(email, booking_id, stripe=None):
- 
-    admin_email = os.getenv("EMAIL_USER")  # Replace with your email address
-    sender_password = os.getenv("EMAIL_PASSWORD")  # Replace with a secure app-specific password
-    subject = "Your Booking Request Has Been Approved"
+def send_email_to_user_after_approval(email, booking_id, user_name, event_name, room_type, booked_dates, amount, security_deposit, rental_amount, comments):
+
+    admin_email = "connect@chesschamps.us"
+    sender_password = "akln niwh wzra ruzf"  # Replace with a secure app-specific password
+    subject = "Booking Approved"
+
+    # Format booked dates for display
+    dates_html = "<br>".join([f"&nbsp;&nbsp;&nbsp;&nbsp;• {date['date']}: {date['startTime']} - {date['endTime']}" for date in booked_dates])
 
     body = (
-        f"Dear User,\n\n"
-        f"Your booking request has been approved successfully. We are excited to confirm your booking.\n\n"
-        f"Booking ID: {booking_id}\n\n"
-        f"Thank you for your patience. You can now proceed with your booking.\n\n"
-    )
-
-    # If stripe field is provided, add the payment information to the email
-    if stripe:
-        body += f"\n\nYou can make your payment using the following link: {stripe}\n"
-    body += (
-        f"\nBest regards,\n"
-        f"The BCC Rentals Team"
+        f"Hi {user_name},<br><br>"
+        f"<strong>Booking Approved</strong><br><br>"
+        f"We are pleased to inform you that your booking request has been approved.<br><br>"
+        f"<strong>Details:</strong><br>"
+        f"• <strong>Booking ID:</strong> {booking_id}<br>"
+        f"• <strong>Event Name:</strong> {event_name}<br>"
+        f"• <strong>Room Type:</strong> {room_type}<br>"
+        f"• <strong>Booked Dates:</strong><br>{dates_html}<br>"
+        f"• <strong>Security Deposit Amount (Refundable):</strong> ${security_deposit}<br>"
+        f"• <strong>Rental Amount:</strong> ${rental_amount}<br>"
+        f"• <strong>Total Amount:</strong> ${amount}<br>"
+        f"• <strong>Comments:</strong> {comments}<br><br>"
+        f"If you have any questions or need further assistance, please feel free to contact us.<br><br>"
+        f"Thank you,<br>"
+        f"Best regards,<br>"
+        f"<strong>Bellevue Community Center</strong>"
     )
     # Email setup
     msg = MIMEMultipart()
     msg['From'] = f'{DISPLAY_NAME} <{admin_email}>'
     msg['To'] = email
     msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
+    msg.attach(MIMEText(body, 'html'))
 
     try:
         # Send email via Gmail's SMTP server
@@ -191,24 +209,77 @@ def send_email_to_user_after_approval(email, booking_id, stripe=None):
     finally:
         server.quit()
 
+def send_email_to_user_after_rejection(email, booking_id, user_name, event_name, room_type, booked_dates, reason, spoken_to_customer):
+    admin_email = "connect@chesschamps.us"
+    sender_password = "akln niwh wzra ruzf"
+    subject = "Booking Declined"
+
+    # Format booked dates for display
+    dates_html = "<br>".join([f"&nbsp;&nbsp;&nbsp;&nbsp;• {date['date']}: {date['startTime']} - {date['endTime']}" for date in booked_dates])
+
+    body = (
+        f"Hi {user_name},<br><br>"
+        f"<strong>Booking Declined</strong><br><br>"
+        f"We regret to inform you that your booking request has been declined.<br><br>"
+        f"<strong>Details:</strong><br>"
+        f"• <strong>Booking ID:</strong> {booking_id}<br>"
+        f"• <strong>Event Name:</strong> {event_name}<br>"
+        f"• <strong>Room Type:</strong> {room_type}<br>"
+        f"• <strong>Booked Dates:</strong><br>{dates_html}<br>"
+        f"• <strong>Reason:</strong> {reason}<br>"
+        f"• <strong>Spoken to Customer:</strong> {'Yes' if spoken_to_customer else 'No'}<br><br>"
+        f"If you have any further questions or would like to discuss this, please feel free to reach out to us.<br><br>"
+        f"Thank you,<br>"
+        f"Best regards,<br>"
+        f"<strong>Bellevue Community Center</strong>"
+    )
+
+    # Email setup
+    msg = MIMEMultipart()
+    msg['From'] = f'{DISPLAY_NAME} <{admin_email}>'
+    msg['To'] = email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'html'))
+
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(admin_email, sender_password)
+        server.sendmail(admin_email, email, msg.as_string())
+        print(f"Rejection email sent successfully to {email}")
+        return True
+    except Exception as e:
+        print(f"Failed to send email. Error: {e}")
+        return False
+    finally:
+        server.quit()
+
 @app.route('/send_email_to_user_request_got_approved', methods=['POST'])
 def send_email_to_user_request_got_approved_route():
-   
+
     try:
         # Parse the incoming JSON data
         data = request.json
         email = data.get('email', '')
         booking_id = data.get('booking_id', '')
-        stripe = data.get('stripe', '') # Stripe field (optional)
+        user_name = data.get('user_name', '')
+        event_name = data.get('event_name', '')
+        room_type = data.get('room_type', '')
+        booked_dates = data.get('booked_dates', [])
+        amount = data.get('amount', '')
+        security_deposit = data.get('security_deposit', '')
+        rental_amount = data.get('rental_amount', '')
+        comments = data.get('comments', 'N/A')
 
         # Validate input
-        if not email:
-            return jsonify({"error": "Email is required"}), 400
-        if not booking_id:
-            return jsonify({"error": "Booking ID is required"}), 400
+        if not email or not booking_id:
+            return jsonify({"error": "Email and Booking ID are required"}), 400
 
         # Call the function to send an email to the user
-        email_sent = send_email_to_user_after_approval(email, booking_id, stripe)
+        email_sent = send_email_to_user_after_approval(
+            email, booking_id, user_name, event_name, room_type,
+            booked_dates, amount, security_deposit, rental_amount, comments
+        )
 
         if email_sent:
             return jsonify({"success": "Email sent successfully"}), 200
@@ -222,22 +293,34 @@ def send_email_to_user_request_got_approved_route():
  
 @app.route('/send_email_to_user_request_got_rejected', methods=['POST'])
 def send_email_to_user_request_got_rejected_route():
-   
+
     try:
         # Parse the incoming JSON data
         data = request.json
         email = data.get('email', '')
         booking_id = data.get('booking_id', '')
-        note = data.get('note', '') 
+        user_name = data.get('user_name', '')
+        event_name = data.get('event_name', '')
+        room_type = data.get('room_type', '')
+        booked_dates = data.get('booked_dates', [])
+        reason = data.get('reason', '')
+        spoken_to_customer = data.get('spoken_to_customer', False)
+
+        print(f"=== DECLINE EMAIL REQUEST ===")
+        print(f"Email: {email}")
+        print(f"Booking ID: {booking_id}")
+        print(f"Reason: {reason}")
+        print(f"Spoken to customer: {spoken_to_customer}")
 
         # Validate input
-        if not email:
-            return jsonify({"error": "Email is required"}), 400
-        if not booking_id:
-            return jsonify({"error": "Booking ID is required"}), 400
+        if not email or not booking_id:
+            return jsonify({"error": "Email and Booking ID are required"}), 400
 
         # Call the function to send an email to the user
-        email_sent = send_email_to_user_after_approval(email, booking_id, note)
+        email_sent = send_email_to_user_after_rejection(
+            email, booking_id, user_name, event_name, room_type,
+            booked_dates, reason, spoken_to_customer
+        )
 
         if email_sent:
             return jsonify({"success": "Email sent successfully"}), 200
@@ -399,13 +482,13 @@ def forgot_password():
         # Send email
         msg = MIMEText(email_body, "html")
         msg["Subject"] = "Password Reset Request"
-        msg["From"] =admin_email
+        msg["From"] = "connect@chesschamps.us"
         msg["To"] = email
 
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
-            server.login(admin_email, sender_password)
-            server.sendmail(admin_email, [email], msg.as_string())
+            server.login("connect@chesschamps.us", "akln niwh wzra ruzf")
+            server.sendmail("connect@chesschamps.us", [email], msg.as_string())
 
         return jsonify({"message": "Password reset link sent to your email"}), 200
     except Exception as e:
@@ -526,14 +609,6 @@ def checkout():
     # Add the booking ID to the booked_details
     booked_details['booking_id'] = booking_id
 
-    if booked_details.get('organization_type') is None:
-        booked_details['organization_type'] = "N/A"
-    if booked_details.get('eventDescription') is None:
-        booked_details['eventDescription'] = "N/A"
-
-    if 'flexible' not in booked_details:
-        booked_details['flexible'] = False
-
     # Check if user exists in the database
     user = users_collection.find_one({"email": email})
 
@@ -594,13 +669,21 @@ def get_booking_details():
 @app.route('/update-booking-status', methods=['POST'])
 def update_booking_status():
     data = request.json
-    Admin_name = data.get('Admin_name') 
-    Admin_email = data.get('Admin_email') 
+    Admin_name = data.get('Admin_name')
+    Admin_email = data.get('Admin_email')
     email = data.get('email')  # Get email from the request
     booking_id = data.get('booking_id')  # Get booking_id from the request
     paid = data.get('paid')  # Get 'paid' status from the request
     approved = data.get('approved')  # Get 'approved' status from the request
     reject = data.get('reject', False)  # Default to False if not provided
+
+    # New fields for acceptance/decline details
+    security_deposit = data.get('security_deposit')
+    rental_amount = data.get('rental_amount')
+    total_amount = data.get('total_amount')
+    admin_comments = data.get('admin_comments')
+    decline_reason = data.get('decline_reason')
+    spoken_to_customer = data.get('spoken_to_customer')
 
     # Basic validation
     if not email or not booking_id:
@@ -626,6 +709,18 @@ def update_booking_status():
                 "booked_details.$.Admin_email": Admin_email
             }
 
+            # Add acceptance details if approved
+            if approved and security_deposit is not None:
+                update_fields["booked_details.$.security_deposit"] = security_deposit
+                update_fields["booked_details.$.rental_amount"] = rental_amount
+                update_fields["booked_details.$.total_amount"] = total_amount
+                update_fields["booked_details.$.admin_comments"] = admin_comments or "N/A"
+
+            # Add decline details if rejected
+            if reject:
+                update_fields["booked_details.$.decline_reason"] = decline_reason or "N/A"
+                update_fields["booked_details.$.spoken_to_customer"] = spoken_to_customer
+
             # Save the updated user document back to the database
             users_collection.update_one(
                 {"_id": user["_id"], "booked_details.booking_id": booking_id},
@@ -638,43 +733,6 @@ def update_booking_status():
     else:
         return jsonify({"error": "User or booking not found"}), 404
 
-@app.route('/checkout/filter', methods=['GET'])
-def filter_booked_details():
-    title = request.args.get('title', '').strip()  # Strip any whitespace/newlines
-    check_in = request.args.get('checkIn', '').strip()  # Strip any whitespace/newlines
-
-    if not title or not check_in:
-        return jsonify({"error": "Title and check-in date are required"}), 400
-
-    print(f"Searching for Title: {title}, Check-In Date: {check_in}")
-
-    matching_bookings = []
-
-    users = users_collection.find({}, {"email": 1, "booked_details": 1})  # Fetch only email and booked_details
-
-    for user in users:
-        for booking_list in user.get('booked_details', []):
-            for booking in booking_list:
-                print(f"Checking Booking: {booking}")  # Debugging line
-                
-                booking_check_in = booking.get('checkIn')
-                if booking_check_in and isinstance(booking_check_in, str):
-                    try:
-                        booking_check_in_date = datetime.fromisoformat(booking_check_in)
-                        request_check_in_date = datetime.fromisoformat(check_in)
-                    except ValueError as e:
-                        print(f"Invalid date format: {e}")  # Improved error logging
-                        continue
-                    
-                    if booking.get('title') == title and booking_check_in_date == request_check_in_date:
-                        matching_bookings.append({
-                            "email": user['email'],
-                            "booking": booking
-                        })
-
-    print(f"Matching Bookings: {matching_bookings}")  # Debugging line
-    return jsonify(matching_bookings), 200
-
 @app.route('/users', methods=['GET'])
 def get_all_users():
     # Fetch all users from the database, excluding the _id field
@@ -685,18 +743,62 @@ def get_all_users():
 
     return jsonify(users_list), 200
 
+@app.route('/send_contact_form_email', methods=['POST'])
+def send_contact_form_email():
+    try:
+        # Parse the incoming JSON data
+        data = request.json
+        name = data.get('name', '')
+        lastname = data.get('lastname', '')
+        email = data.get('email', '')
+        subject = data.get('subject', '')
+        message = data.get('message', '')
 
+        # Validate input
+        if not name or not lastname or not email or not subject or not message:
+            return jsonify({"error": "All fields are required"}), 400
 
-@app.route('/users_without_admin', methods=['GET'])
-def users_without_admin():
-    # Fetch all users from the database, excluding the _id field
-    users = users_collection.find({}, {"_id": 0})  # 0 to exclude _id
-    users_list = [user for user in users]
-    # Convert MongoDB documents to a list of dictionaries
- 
-    users_list = [user for user in users_list if not user.get('Admin') == True ]
+        # Email to send to rentalsbcc
+        recipient_email = "rentalsbcc@gmail.com"
+        admin_email = "connect@chesschamps.us"
+        sender_password = "akln niwh wzra ruzf"
 
-    return jsonify(users_list), 200
+        # Email subject and body
+        email_subject = f"Contact Form: {subject}"
+        email_body = (
+            f"<strong>New Contact Form Submission</strong><br><br>"
+            f"<strong>Name:</strong> {name} {lastname}<br>"
+            f"<strong>Email:</strong> {email}<br>"
+            f"<strong>Subject:</strong> {subject}<br>"
+            f"<strong>Message:</strong><br>{message}<br><br>"
+            f"---<br>"
+            f"This message was sent from the BCC Rentals contact form."
+        )
+
+        # Email setup
+        msg = MIMEMultipart()
+        msg['From'] = f'BCC Rentals <{admin_email}>'
+        msg['To'] = recipient_email
+        msg['Reply-To'] = email
+        msg['Subject'] = email_subject
+        msg.attach(MIMEText(email_body, 'html'))
+
+        try:
+            # Send email via Gmail's SMTP server
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(admin_email, sender_password)
+            server.sendmail(admin_email, recipient_email, msg.as_string())
+            server.quit()
+            print(f"Contact form email sent successfully to {recipient_email}")
+            return jsonify({"success": "Email sent successfully"}), 200
+        except Exception as e:
+            print(f"Failed to send email. Error: {e}")
+            return jsonify({"error": "Failed to send email"}), 500
+
+    except Exception as e:
+        print(f"Error in /send_contact_form_email: {e}")
+        return jsonify({"error": str(e)}), 400
 
 @app.route('/users/already_booked_dates', methods=['GET'])
 def already_booked_dates():
