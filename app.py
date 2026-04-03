@@ -26,8 +26,8 @@ password_reset_tokens_collection = db.password_reset_tokens
 DISPLAY_NAME = "BCC Rentals"
 
 def send_email(email, subject, body, is_html=False):
-    admin_email = "connect@chesschamps.us"
-    sender_password = "akln niwh wzra ruzf"  # Replace with a secure app-specific password
+    admin_email = "rentalsbcc@gmail.com"
+    sender_password = "srzt vbha cxfg fmba"  # Replace with a secure app-specific password
 
     msg = MIMEMultipart()
     msg['From'] = f'Rentals – BCC <{admin_email}>'
@@ -95,8 +95,8 @@ def send_email_to_admin(email, booking_id):
     """
     Sends an email to the admin for approval of a booking request.
     """
-    admin_email = "connect@chesschamps.us"
-    sender_password = "akln niwh wzra ruzf"  # Replace with a secure app-specific password
+    admin_email = "rentalsbcc@gmail.com"
+    sender_password = "srzt vbha cxfg fmba"  # Replace with a secure app-specific password
     subject = "New Event Request From BCC Rentals"
 
     # Updated body to include the link and booking ID
@@ -114,7 +114,7 @@ def send_email_to_admin(email, booking_id):
     # Email setup
     msg = MIMEMultipart()
     msg['From'] = f'{DISPLAY_NAME} <{admin_email}>'
-    msg['To'] = "connect@chesschamps.us"  # This should always go to the admin's email
+    msg['To'] = "rentalsbcc@gmail.com"  # This should always go to the admin's email
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
 
@@ -123,7 +123,7 @@ def send_email_to_admin(email, booking_id):
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(admin_email, sender_password)
-        server.sendmail(admin_email, "connect@chesschamps.us", msg.as_string())
+        server.sendmail(admin_email, "rentalsbcc@gmail.com", msg.as_string())
         print(f"Email sent successfully to admin about booking ID {booking_id}")
         return True
     except Exception as e:
@@ -162,8 +162,8 @@ def send_email_to_admin_to_approve():
  
 def send_email_to_user_after_approval(email, booking_id, user_name, event_name, room_type, booked_dates, amount, security_deposit, rental_amount, comments):
 
-    admin_email = "connect@chesschamps.us"
-    sender_password = "akln niwh wzra ruzf"  # Replace with a secure app-specific password
+    admin_email = "rentalsbcc@gmail.com"
+    sender_password = "srzt vbha cxfg fmba"  # Replace with a secure app-specific password
     subject = "Booking Approved"
 
     # Format booked dates for display
@@ -210,8 +210,8 @@ def send_email_to_user_after_approval(email, booking_id, user_name, event_name, 
         server.quit()
 
 def send_email_to_user_after_rejection(email, booking_id, user_name, event_name, room_type, booked_dates, reason, spoken_to_customer):
-    admin_email = "connect@chesschamps.us"
-    sender_password = "akln niwh wzra ruzf"
+    admin_email = "rentalsbcc@gmail.com"
+    sender_password = "srzt vbha cxfg fmba"
     subject = "Booking Declined"
 
     # Format booked dates for display
@@ -482,13 +482,13 @@ def forgot_password():
         # Send email
         msg = MIMEText(email_body, "html")
         msg["Subject"] = "Password Reset Request"
-        msg["From"] = "connect@chesschamps.us"
+        msg["From"] = "rentalsbcc@gmail.com"
         msg["To"] = email
 
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
-            server.login("connect@chesschamps.us", "akln niwh wzra ruzf")
-            server.sendmail("connect@chesschamps.us", [email], msg.as_string())
+            server.login("rentalsbcc@gmail.com", "srzt vbha cxfg fmba")
+            server.sendmail("rentalsbcc@gmail.com", [email], msg.as_string())
 
         return jsonify({"message": "Password reset link sent to your email"}), 200
     except Exception as e:
@@ -760,8 +760,8 @@ def send_contact_form_email():
 
         # Email to send to rentalsbcc
         recipient_email = "rentalsbcc@gmail.com"
-        admin_email = "connect@chesschamps.us"
-        sender_password = "akln niwh wzra ruzf"
+        admin_email = "rentalsbcc@gmail.com"
+        sender_password = "srzt vbha cxfg fmba"
 
         # Email subject and body
         email_subject = f"Contact Form: {subject}"
